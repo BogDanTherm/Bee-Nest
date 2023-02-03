@@ -1,0 +1,71 @@
+clear all; close all; clc;
+
+% Load the drone's camera feed
+v = VideoReader('drone_feed.avi');
+
+% Define the range of colors for the cigarette butts
+lower = [20 20 20];
+upper = [40 255 255];
+
+% Create a figure to display the results
+figure;
+
+while hasFrame(v)
+    % Read the next frame
+    frame = readFrame(v);
+
+    % Convert the frame to HSV color space
+    hsv = rgb2hsv(frame);
+
+    % Create a mask for the cigarette butts
+    mask = (hsv(:,:,1) >= lower(1)/360) & (hsv(:,:,1) <= upper(1)/360) & ...
+           (hsv(:,:,2) >= lower(2)/255) & (hsv(:,:,2) <= upper(2)/255) & ...
+           (hsv(:,:,3) >= lower(3)/255) & (hsv(:,:,3) <= upper(3)/255);
+
+    % Erode and dilate the mask to remove noise
+    se = strel('square', 3);
+    mask = imerode(mask, se);
+    mask = imdilate(mask, se);
+
+    % Find contours in the mask
+    contours = bwboundaries(mask, 'noholes');
+
+    % Loop over the contours
+    for i = 1:length(contours)
+        % Get the current contour
+        c = contours{i};
+
+        % Check if the contour is large enough to be a cigarette butt
+        if size(c,1) < 100
+            continue;
+        end
+
+        % Calculate the center of the contour
+        cX = mean(c(:,2));
+        cY = mean(c(:,1));
+
+        % Draw the contour and center of the shape on the image
+        hold on;
+        plot(c(:,2), c(:,1), 'g', 'LineWidth', 2);
+        plot(cX, cY, 'ro', 'LineWidth', 2, 'MarkerSize', 7);
+        text(cX-20, cY-20, 'center', 'Color', 'white');
+        hold off;
+
+        % Move the drone towards the cigarette butt
+        % Code to control the drone's movement goes here
+    end
+
+    % Show the results
+    imshow(frame);
+
+    % Break the loop if the user presses 'q'
+    if waitforbuttonpress == 1
+        break;
+    end
+end
+
+
+This code uses the VideoReader function from the Image Processing Toolbox to read the video feed from the drone's camera, 
+and the rgb2hsv function to convert the frame to HSV color space. The bwboundaries function is used to find contours in 
+the binary mask, and the imerode and imdilate functions are used to remove noise from the mask. The code also uses the plot and text functions to display the results.
+ As with the previous code, additional code would be required to control the drone's movement towards the cigarette butt.
