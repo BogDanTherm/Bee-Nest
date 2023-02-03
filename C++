@@ -1,0 +1,46 @@
+#include <iostream>
+#include <opencv2/opencv.hpp>
+
+// Use of OpenCV library is subject to the BSD License
+// https://opencv.org/license/
+
+using namespace std;
+using namespace cv;
+
+int main(int argc, char** argv)
+{
+    // Load the drone's camera feed
+    VideoCapture cap(0);
+    if (!cap.isOpened())
+    {
+        cout << "Error: Could not open camera." << endl;
+        return -1;
+    }
+
+    // Loop through the video feed
+    while (true)
+    {
+        Mat frame;
+        cap >> frame;
+
+        // Convert the frame to grayscale
+        Mat gray;
+        cvtColor(frame, gray, COLOR_BGR2GRAY);
+
+        // Apply edge detection to the grayscale image
+        Mat edges;
+        Canny(gray, edges, 50, 150);
+
+        // Show the results
+        imshow("Original", frame);
+        imshow("Edges", edges);
+
+        // Break the loop if the user presses 'q'
+        if (waitKey(30) == 'q')
+        {
+            break;
+        }
+    }
+
+    return 0;
+}
