@@ -1,0 +1,71 @@
+import cv2
+import numpy as np
+import imutils
+import time
+
+# Load the drone's camera feed
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("Error: Could not open camera.")
+    exit()
+
+while True:
+    # Read the current frame
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Convert the frame to HSV color space
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # Define the range of colors for the cigarette butts
+    lower = np.array([20, 20, 20])
+    upper = np.array([40, 255, 255])
+
+    # Create a mask for the cigarette butts
+    mask = cv2.inRange(hsv, lower, upper)
+    mask = cv2.erode(mask, None, iterations=2)
+    mask = cv2.dilate(mask, None, iterations=2)
+
+    # Find contours in the mask
+    cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+                            cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+
+    # Loop over the contours
+    for c in cnts:
+        # Check if the contour is large enough to be a cigarette butt
+        if cv2.contourArea(c) < 100:
+            continue
+
+        # Calculate the center of the contour
+        M = cv2.moments(c)
+        if M["m00"] == 0:
+            continue
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+
+        # Draw the contour and center of the shape on the image
+        cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
+        cv2.circle(frame, (cX, cY), 7, (255, 255, 255), -1)
+        cv2.putText(frame, "center", (cX - 20, cY - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
+        # Move the drone towards the cigarette butt
+        # Code to control the drone's movement goes here
+
+    # Show the results
+    cv2.imshow("Frame", frame)
+
+    # Break the loop if the user presses 'q'
+    if cv2.waitKey(30) == ord('q'):
+        break
+
+# Release the camera and close the windows
+cap.release()
+cv2.destroyAllWindows()
+
+
+This code uses the OpenCV library to process the video feed from the drone's camera, 
+detect cigarette butts in the image, and calculate the center of each butt. 
+The movement of the drone towards the cigarette butt would likely involve additional code to control the drone's motors or actuators.
